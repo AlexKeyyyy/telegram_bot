@@ -52,7 +52,7 @@ bot.on("message", (msg) => {
   if (msg.text === "Статистика") {
     let response = "Статистика скучания:\n";
     for (const userId in missCount) {
-      response += `${missCount[userId].name} скучал ${missCount[userId].count} раз(а).\n`;
+      response += `${missCount[userId].name} скучал(-a) ${missCount[userId].count} раз(а).\n`;
     }
     bot.sendMessage(chatId, response);
   }
