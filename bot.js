@@ -1,17 +1,25 @@
 const TelegramBot = require("node-telegram-bot-api");
 
-// Укажите свой токен бота
+const express = require("express");
+
 const token = "7454298868:AAHZtv8YEORzprkF9DgY5paiCGcXk6il_Wg";
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token);
+const app = express();
+
+bot.setWebHook(`https://telegram-bot-sveta.vercel.app/${token}`);
+
+app.use(express.json());
+
+app.post(`/${token}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
 
 // Словарь для хранения количества нажатий
 const missCount = {};
 
-// Команда /start
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
-
-  // Создаем кнопки для клавиатуры
   const opts = {
     reply_markup: {
       keyboard: [["Я скучаю", "Статистика"]],
@@ -19,7 +27,6 @@ bot.onText(/\/start/, (msg) => {
       one_time_keyboard: false,
     },
   };
-
   bot.sendMessage(
     chatId,
     "Привет, Света! Используй кнопки внизу, чтобы выразить свои чувства.",
@@ -27,21 +34,17 @@ bot.onText(/\/start/, (msg) => {
   );
 });
 
-// Обработка нажатия на кнопку "Я скучаю"
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const userName = msg.from.first_name;
 
   if (msg.text === "Я скучаю") {
-    // Увеличиваем счетчик для текущего пользователя
     if (missCount[userId]) {
       missCount[userId].count += 1;
     } else {
       missCount[userId] = { name: userName, count: 1 };
     }
-
-    // Отправляем сообщение с количеством нажатий
     const totalCount = missCount[userId].count;
     bot.sendMessage(chatId, `${userName}, ты скучал ${totalCount} раз(а)!`);
   }
@@ -53,4 +56,9 @@ bot.on("message", (msg) => {
     }
     bot.sendMessage(chatId, response);
   }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
